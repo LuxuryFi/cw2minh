@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    android:layout_marginTop="16dp">
+
+    <!-- Day of the Week -->
+    <EditText
+        android:id="@+id/dayOfWeekEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Day of the Week"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Time -->
+    <EditText
+        android:id="@+id/timeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Time"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Capacity -->
+    <EditText
+        android:id="@+id/capacityEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Capacity"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Duration -->
+    <EditText
+        android:id="@+id/durationEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Duration (minutes)"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Price -->
+    <EditText
+        android:id="@+id/priceEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Price"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Class Type -->
+    <EditText
+        android:id="@+id/classTypeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Class Type"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <EditText
+        android:id="@+id/textImage"
+        android:layout_width="270dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="Image"
+        android:inputType="textPersonName"
+        android:minHeight="48dp" />
+
+    <!-- Description -->
+    <EditText
+        android:id="@+id/descriptionEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description"
+        android:layout_marginBottom="12dp"
+        android:padding="10dp" />
+
+    <!-- Teacher -->
+    <EditText
+        android:id="@+id/teacherEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Teacher"
+        android:layout_marginBottom="16dp"
+        android:padding="10dp" />
+
+    <Button
+        android:id="@+id/buttonAction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="ACtions"
+ />
+
+    <!-- Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="169dp"
+        android:layout_height="108dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Image View -->
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="179dp"
+        android:layout_height="102dp"
+        android:layout_marginTop="4dp"
+        android:scaleType="centerCrop" />
+
+    <!-- Button Container (Save & Back buttons side by side) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:gravity="center_horizontal">
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Save Class"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Back Button -->
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Back" />
+    </LinearLayout>
+</LinearLayout>
