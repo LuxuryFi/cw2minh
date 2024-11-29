@@ -11,6 +11,19 @@ public class Upload {
     private String description;
     private String teacher;
 
+    public String getJsonPayload() {
+        return jsonpayload;
+    }
+
+    public void setJsonPayload(String jsonPayload) {
+        this.jsonpayload = jsonPayload;
+    }
+
+    private String jsonpayload;
+
+
+    private String  uploadResponseCode;
+
     public Upload(int id, String dayOfWeek, String time, int capacity, int duration, double price, String classType, String description, String teacher) {
         this.id = id;
         this.dayOfWeek = dayOfWeek;
@@ -34,6 +47,14 @@ public class Upload {
 
     public String getDayOfWeek() {
         return dayOfWeek;
+    }
+
+    public String getUploadResponseCode() {
+        return uploadResponseCode;
+    }
+
+    public void setUploadResponseCode(String uploadResponseCode) {
+        this.uploadResponseCode = uploadResponseCode;
     }
 
     public void setDayOfWeek(String dayOfWeek) {

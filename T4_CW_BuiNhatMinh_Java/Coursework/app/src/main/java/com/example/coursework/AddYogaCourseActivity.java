@@ -6,80 +6,63 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.View;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import android.widget.ImageView;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.MenuItem;
-import androidx.annotation.NonNull;
-
-import android.view.View;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Toast;
-import androidx.core.app.ActivityCompat;
-import com.google.android.material.navigation.NavigationView;
-import com.google.common.util.concurrent.ListenableFuture;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import androidx.core.content.ContextCompat;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AddYogaCourseActivity extends AppCompatActivity {
 
-    private EditText dayOfWeekEditText;
-    private EditText timeEditText;
-    private EditText capacityEditText;
-    private EditText durationEditText;
-    private EditText priceEditText;
-    private EditText classTypeEditText;
-    private EditText descriptionEditText;
-    private EditText teacherEditText;
-
-    private EditText imageText;
-
-    private Button saveButton;
-    private Button backButton;
+    private EditText dayOfWeekEditText, timeEditText, capacityEditText, durationEditText, priceEditText,
+            classTypeEditText, descriptionEditText, teacherEditText, imageText;
+    private Button saveButton, backButton;
     private YogaCourseDBHelper dbHelper;
-    ImageCapture imageCapture;
-    Executor executor = Executors.newSingleThreadExecutor();
+    private ImageCapture imageCapture;
+    private Executor executor = Executors.newSingleThreadExecutor();
 
-
-    final int REQUEST_CODE_PERMISSIONS = 1001;
-    final String[] REQUIRED_PERMISSIONS = new String[]{
-            "android.permission.CAMERA",
-            "android.permission.RECORD_AUDIO"
+    private static final int REQUEST_CODE_PERMISSIONS = 1001;
+    private static final String[] REQUIRED_PERMISSIONS = new String[] {
+            "android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.RECORD_AUDIO"
     };
 
-    ImageView imageView;
-    EditText inputPictureUri;
-    PreviewView previewView;
+    private ImageView imageView;
+    private EditText inputPictureUri;
+    private PreviewView previewView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,26 +84,27 @@ public class AddYogaCourseActivity extends AppCompatActivity {
 
         if (!allPermissionsGranted()) {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        } else {
+            startCamera();
         }
-        startCamera();
 
         imageView = findViewById(R.id.imageView);
         previewView = findViewById(R.id.previewView);
         inputPictureUri = findViewById(R.id.textImage);
-        Button btn =findViewById(R.id.buttonAction);
+        Button btn = findViewById(R.id.buttonAction);
+
         btn.setOnClickListener(view -> {
             final String[] items = {"Take photo", "Choose from gallery", "View picture from an URI"};
             AlertDialog.Builder dlg = new AlertDialog.Builder(this);
             dlg.setItems(items, (diaglog, item) -> {
-                if(items[item].equals("Take photo")) {
-                    Toast.makeText(this, "Take photo", Toast.LENGTH_LONG);
+                if (items[item].equals("Take photo")) {
+                    Toast.makeText(this, "Take photo", Toast.LENGTH_LONG).show();
                     takePhoto();
                 } else if (items[item].equals("Choose from gallery")) {
-                    Toast.makeText(this, "Choose from gallery", Toast.LENGTH_LONG);
+                    Toast.makeText(this, "Choose from gallery", Toast.LENGTH_LONG).show();
                     selectPictureFromGallery();
-
                 } else if (items[item].equals("View picture from an URI")) {
-                    Toast.makeText(this, "View picture from an URI", Toast.LENGTH_LONG);
+                    Toast.makeText(this, "View picture from an URI", Toast.LENGTH_LONG).show();
                     String uri = inputPictureUri.getText().toString();
                     File file = new File(uri);
                     Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
@@ -131,16 +115,23 @@ public class AddYogaCourseActivity extends AppCompatActivity {
 
             dlg.show();
         });
+
         // Initialize Save button
         saveButton = findViewById(R.id.saveButton);
-        saveButton.setOnClickListener(v -> saveYogaCourse());
+        saveButton.setOnClickListener(v -> {
+            try {
+                saveYogaCourse();
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         // Initialize Back button
         backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> finish());  // Close the activity without saving
     }
 
-    private void saveYogaCourse() {
+    private void saveYogaCourse() throws JSONException {
         String dayOfWeek = dayOfWeekEditText.getText().toString();
         String time = timeEditText.getText().toString();
         String capacityStr = capacityEditText.getText().toString();
@@ -157,6 +148,45 @@ public class AddYogaCourseActivity extends AppCompatActivity {
             return;
         }
 
+        JSONObject jsonPayload = new JSONObject();
+        try {
+            jsonPayload.put("userId", "gw001249268");
+            jsonPayload.put("dayOfWeek", "3123123123");
+            jsonPayload.put("time", "123123");
+            jsonPayload.put("capacity", 12312);
+            jsonPayload.put("duration", 3121);
+            jsonPayload.put("price", 312);
+            jsonPayload.put("classType", "121212");
+            jsonPayload.put("description", "1312");
+            jsonPayload.put("teacher", "12312");
+            jsonPayload.put("image", "1212");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+// Print out the JSON for debugging
+        Log.e("TAG", "Sending JSON: " + jsonPayload.toString());
+
+// Retrofit setup
+        ApiInterface apiInterface = RetrofitClient.getRetrofitInstance().create(ApiInterface.class);
+
+// Call API with the JSON payload
+        Call<Upload> call = apiInterface.getUserInformation(jsonPayload);
+        call.enqueue(new Callback<Upload>() {
+            @Override
+            public void onResponse(Call<Upload> call, Response<Upload> response) {
+                if (response.isSuccessful()) {
+                    Log.e("TAG", "Upload successful");
+                } else {
+                    Log.e("TAG", "Upload failed with code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Upload> call, Throwable t) {
+                Log.e("TAG", "Upload failed: " + t.getMessage());
+            }
+        });
         int capacity = 0;
         int duration = 0;
         double price = 0.0;
@@ -172,36 +202,29 @@ public class AddYogaCourseActivity extends AppCompatActivity {
 
         YogaCourse newCourse = new YogaCourse(0, dayOfWeek, time, capacity, duration, price, classType, description, teacher, image);
 
-        // Call AsyncTask to add the course to the database
-        new AddYogaCourseTask().execute(newCourse);
-    }
+        // Using ExecutorService to perform the task in background
+        executor.execute(() -> {
+            dbHelper.addYogaCourse(newCourse);  // Add the course to the database
 
-    private class AddYogaCourseTask extends AsyncTask<YogaCourse, Void, Void> {
+            runOnUiThread(() -> {
+                // Show success message
+                Toast.makeText(AddYogaCourseActivity.this, "Yoga class added successfully!", Toast.LENGTH_SHORT).show();
 
-        @Override
-        protected Void doInBackground(YogaCourse... yogaCourses) {
-            dbHelper.addYogaCourse(yogaCourses[0]);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            // Show success message
-            Toast.makeText(AddYogaCourseActivity.this, "Yoga class added successfully!", Toast.LENGTH_SHORT).show();
-
-            // Send result back to MainActivity to reload the data
-            Intent resultIntent = new Intent();
-            setResult(RESULT_OK, resultIntent);
-            finish();  // Close AddYogaCourseActivity and return to MainActivity
-        }
+                // Send result back to MainActivity to reload the data
+                Intent resultIntent = new Intent();
+                setResult(RESULT_OK, resultIntent);
+                finish();  // Close AddYogaCourseActivity and return to MainActivity
+            });
+        });
     }
 
     private void selectPictureFromGallery() {
         Intent intent = new Intent();
         intent.setType("image/*");
-        intent.setAction(intent.ACTION_GET_CONTENT);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
         launchActivity.launch(intent);
     }
+
     ActivityResultLauncher<Intent> launchActivity = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -224,86 +247,53 @@ public class AddYogaCourseActivity extends AppCompatActivity {
     private File bitmapToFile(Bitmap bitmap, String filepath) {
         File file = null;
         try {
-            file = new File(filepath);
+            file = new File(filepath + ".png");  // Append .png extension
             file.createNewFile();
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0,bos);
-            byte[] bitmapdata = bos.toByteArray();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+            byte[] bitmapData = bos.toByteArray();
 
             FileOutputStream fos = new FileOutputStream(file);
-            fos.write(bitmapdata);
+            fos.write(bitmapData);
             fos.flush();
             fos.close();
-            return file;
-        } catch (Exception e) {
+
+        } catch (IOException e) {
             e.printStackTrace();
-            return file;
         }
+        return file;
     }
 
-
-    private void takePhoto() {
-        long timestamp = System.currentTimeMillis();
-        File savedFile = new File(getApplicationContext().getFilesDir(), String.valueOf(timestamp));
-        ImageCapture.OutputFileOptions option2 = new ImageCapture.OutputFileOptions.Builder(
-                savedFile
-        ).build();
-        imageCapture.takePicture(option2, executor,
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Uri selectingImage = outputFileResults.getSavedUri();
-                        runOnUiThread(() -> {
-                            try {
-                                imageView.setImageBitmap(MediaStore.Images.Media.getBitmap(getContentResolver(), selectingImage));
-                                inputPictureUri.setText(selectingImage.getPath());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-
-                    }
-                });
-    }
-
-    private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderListenableFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderListenableFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderListenableFuture.get();
-                CameraSelector cameraSelector =  CameraSelector.DEFAULT_BACK_CAMERA;
-                Preview preview = new Preview.Builder().build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-                imageCapture = new ImageCapture.Builder().build();
-                try {
-                    cameraProvider.unbindAll();
-                    cameraProvider.bindToLifecycle(
-                            this, cameraSelector, preview, imageCapture);
-                } catch (Exception ex) {
-                    Log.e("Test", "Usse casese ");
-                }
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(this));
-    }
-
-    boolean allPermissionsGranted()
-    {
-        for (String permission: REQUIRED_PERMISSIONS) {
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
         return true;
+    }
 
+    private void startCamera() {
+        // Initialize CameraX (only for devices with CAMERA permission granted)
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                Preview preview = new Preview.Builder().build();
+                CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
+                imageCapture = new ImageCapture.Builder().build();
+
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void takePhoto() {
+        // Implement photo capturing functionality here.
     }
 }

@@ -12,8 +12,8 @@ import java.util.List;
 
 public class YogaCourseDBHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "yogaCourses.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "yogaCourses1.db";
+    private static final int DATABASE_VERSION = 8;
 
     public static final String TABLE_YOGA_COURSE = "yoga_course";
     public static final String COLUMN_ID = "id";
@@ -25,7 +25,7 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CLASS_TYPE = "class_type";
     public static final String COLUMN_DESCRIPTION = "description";
     public static final String COLUMN_TEACHER = "teacher";
-    public static final String COLUMN_IMAGE = "image";
+    public static final String COLUMN_IMAGE = "image";  // Added image column
 
     public YogaCourseDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -33,6 +33,7 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        // Create the yoga_course table with the image column
         String CREATE_YOGA_COURSE_TABLE = "CREATE TABLE " + TABLE_YOGA_COURSE + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_DAY_OF_WEEK + " TEXT, "
@@ -42,14 +43,17 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
                 + COLUMN_PRICE + " REAL, "
                 + COLUMN_CLASS_TYPE + " TEXT, "
                 + COLUMN_DESCRIPTION + " TEXT, "
-                + COLUMN_TEACHER + " TEXT"
+                + COLUMN_TEACHER + " TEXT, "
+                + COLUMN_IMAGE + " TEXT" // Added image column
                 + ")";
         db.execSQL(CREATE_YOGA_COURSE_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Add the image column in case it's missing in an older version of the database
         if (oldVersion < newVersion) {
+            db.execSQL("ALTER TABLE " + TABLE_YOGA_COURSE + " ADD COLUMN " + COLUMN_IMAGE + " TEXT");
         }
     }
 
@@ -64,6 +68,7 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
             values.put(COLUMN_CLASS_TYPE, yogaCourse.getClassType());
             values.put(COLUMN_DESCRIPTION, yogaCourse.getDescription());
             values.put(COLUMN_TEACHER, yogaCourse.getTeacher());
+            values.put(COLUMN_IMAGE, yogaCourse.getImage());  // Insert image field
 
             db.insert(TABLE_YOGA_COURSE, null, values);
         } catch (SQLException e) {
@@ -115,6 +120,7 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
             values.put(COLUMN_CLASS_TYPE, yogaCourse.getClassType());
             values.put(COLUMN_DESCRIPTION, yogaCourse.getDescription());
             values.put(COLUMN_TEACHER, yogaCourse.getTeacher());
+            values.put(COLUMN_IMAGE, yogaCourse.getImage());
 
             int rowsAffected = db.update(TABLE_YOGA_COURSE, values, COLUMN_ID + " = ?", new String[]{String.valueOf(yogaCourse.getId())});
             isUpdated = rowsAffected > 0;
@@ -146,8 +152,7 @@ public class YogaCourseDBHelper extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLASS_TYPE)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEACHER)),
-                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE))
-
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE))  // Retrieve the image field
         );
     }
 }

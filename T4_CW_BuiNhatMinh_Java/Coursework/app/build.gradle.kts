@@ -63,6 +63,9 @@ dependencies {
     implementation("androidx.camera:camera-video:${camerax_version}")
     implementation("com.squareup.picasso:picasso:2.5.1")
     implementation("com.google.android.material:material:1.6.1")
-
+    implementation("androidx.camera:camera-core:1.1.0")
+    implementation("androidx.camera:camera-camera2:1.1.0")
+    implementation("androidx.camera:camera-lifecycle:1.1.0")
+    implementation("androidx.camera:camera-view:1.1.0")
     implementation("androidx.camera:camera-extensions:$camerax_version")
 }

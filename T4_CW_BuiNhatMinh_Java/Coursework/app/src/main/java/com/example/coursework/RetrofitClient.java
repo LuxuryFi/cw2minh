@@ -9,7 +9,7 @@ public class RetrofitClient {
     public static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
-                    .baseUrl("https://cwservice1786.herokuapp.com")
+                    .baseUrl("http://103.107.182.247:3000/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
